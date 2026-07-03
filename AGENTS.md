@@ -9,7 +9,8 @@ npm run build    # 编译 TypeScript（tsc → dist/）
 npm test         # 运行测试（vitest）
 npm run lint     # 仅类型检查（tsc --noEmit）
 ```
-
+## 重要
+接口的参数信息以为`pingcodeDocs`为唯一事实来源
 ## 语言规范
 
 所有面向用户的字符串、注释和文档必须使用**简体中文**。这是中文产品。
@@ -31,5 +32,3 @@ npm run lint     # 仅类型检查（tsc --noEmit）
 ## 注意事项
 
 - 禁止提交 `.env`、`.pingcode_token.json` 或 `dist/` 目录下的文件
-- CLI 在无参数时会直接进入交互式配置流程（而非显示帮助信息）
-- Auth 命令绕过鉴权检查以避免死循环

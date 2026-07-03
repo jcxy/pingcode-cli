@@ -12,6 +12,7 @@ import type { PingCodeAuthOptions, TokenData, TokenResponse } from './types.js';
 
 export class PingCodeAuth {
   readonly apiRoot: string;
+  private oauth2Root: string; // OAuth2 授权端点根路径
   readonly authMode: 'client' | 'user';
   private clientId?: string;
   private clientSecret?: string;
@@ -23,6 +24,16 @@ export class PingCodeAuth {
 
   constructor(options: PingCodeAuthOptions = {}) {
     this.apiRoot = (options.apiRoot || process.env.PINGCODE_API_ROOT || 'https://open.pingcode.com').replace(/\/+$/, '');
+    
+    // 根据 API 地址推导 OAuth2 根路径
+    // 公有云：apiRoot=https://open.pingcode.com → oauth2Root=https://open.pingcode.com/oauth2
+    // 私有部署：apiRoot=https://pm.example.com/open → oauth2Root=https://pm.example.com/oauth2
+    if (this.apiRoot.endsWith('/open')) {
+      this.oauth2Root = this.apiRoot.replace(/\/open$/, '') + '/oauth2';
+    } else {
+      this.oauth2Root = `${this.apiRoot}/oauth2`;
+    }
+    
     this.authMode = options.authMode || (process.env.PINGCODE_AUTH_MODE as 'client' | 'user') || 'client';
     this.tokenStore = new TokenStore(options.tokenFile || process.env.PINGCODE_TOKEN_FILE || '.pingcode_token.json');
 
@@ -49,11 +60,15 @@ export class PingCodeAuth {
     return Date.now() / 1000 < this.expiresAt - 86400;
   }
 
-  getAuthorizeUrl(): string {
+  getAuthorizeUrl(redirectUri?: string): string {
     if (!this.clientId) {
       throw new Error('缺少 client_id，请检查 PINGCODE_USER_CLIENT_ID 配置');
     }
-    return `${this.apiRoot}/oauth2/authorize?response_type=code&client_id=${this.clientId}`;
+    let url = `${this.oauth2Root}/authorize?response_type=code&client_id=${this.clientId}`;
+    if (redirectUri) {
+      url += `&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    }
+    return url;
   }
 
   private _loadTokens(): void {

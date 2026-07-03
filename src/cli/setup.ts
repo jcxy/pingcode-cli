@@ -6,6 +6,7 @@
  */
 
 import readline from 'node:readline';
+import http from 'node:http';
 import path from 'node:path';
 import os from 'node:os';
 import { PingCodeAuth, TokenStore } from '../client/index.js';
@@ -74,11 +75,21 @@ async function ensureApiRoot(): Promise<void> {
   if (config.apiRoot || process.env.PINGCODE_API_ROOT) return;
 
   console.log('');
-  const apiRoot = await prompt('请输入 PingCode API 地址 (直接回车使用默认 https://open.pingcode.com): ');
+  console.log('提示: 私有部署用户的 API 地址格式为 https://你的域名/open');
+  console.log('示例: https://pm.example.com/open');
+  const apiRoot = await prompt('\n请输入 PingCode API 地址 (直接回车使用默认 https://open.pingcode.com): ');
   if (apiRoot) {
-    config.apiRoot = apiRoot;
+    // 私有部署地址自动补全 /open 路径（公有云 open.pingcode.com 无需补全）
+    let normalized = apiRoot.replace(/\/+$/, ''); // 去除末尾斜杠
+    const isPublicCloud = normalized === 'https://open.pingcode.com';
+    if (!isPublicCloud && !normalized.endsWith('/open')) {
+      const corrected = `${normalized}/open`;
+      console.log(`\n检测到私有部署地址，已自动补全为: ${corrected}`);
+      normalized = corrected;
+    }
+    config.apiRoot = normalized;
     saveGlobalConfig(config);
-    process.env.PINGCODE_API_ROOT = apiRoot;
+    process.env.PINGCODE_API_ROOT = normalized;
   }
 }
 
@@ -112,7 +123,7 @@ async function setupClientCredentials(): Promise<void> {
 }
 
 /**
- * 授权码模式引导
+ * 授权码模式引导（自动捕获授权码）
  */
 async function setupAuthorizationCode(): Promise<void> {
   const config = loadGlobalConfig();
@@ -134,16 +145,95 @@ async function setupAuthorizationCode(): Promise<void> {
     console.log(`\n配置已保存到 ${getGlobalConfigPath()}`);
   }
 
+  // 启动本地 HTTP 服务器监听回调
+  const port = 8765; // 使用固定端口便于配置
+  const redirectUri = `http://localhost:${port}/callback`;
+  
   const auth = new PingCodeAuth({ authMode: 'user', tokenFile: GLOBAL_TOKEN_FILE });
-  const url = auth.getAuthorizeUrl();
-  console.log(`\n请在浏览器中打开以下链接完成授权：\n  ${url}\n`);
-  const code = await prompt('请输入授权码: ');
+  const url = auth.getAuthorizeUrl(redirectUri);
+  
+  console.log(`\n正在打开浏览器进行授权...`);
+  console.log(`如果浏览器未自动打开，请手动访问：\n  ${url}\n`);
+  
+  // 尝试自动打开浏览器
+  try {
+    const openCommand = process.platform === 'win32' ? 'start' : process.platform === 'darwin' ? 'open' : 'xdg-open';
+    require('child_process').exec(`${openCommand} "${url}"`);
+  } catch (err) {
+    // 忽略打开浏览器的错误
+  }
+  
+  // 等待用户授权并获取 code
+  const code = await waitForCallback(port);
+  
   if (!code) {
-    console.error('授权码不能为空');
+    console.error('未收到授权码');
     process.exit(1);
   }
+  
+  console.log('\n正在获取令牌...');
   await auth.getUserToken(code);
   console.log('用户令牌获取成功 ✓\n');
+}
+
+/**
+ * 启动临时 HTTP 服务器等待 OAuth2 回调
+ */
+function waitForCallback(port: number): Promise<string | null> {
+  const redirectUri = `http://localhost:${port}/callback`;
+  return new Promise((resolve, reject) => {
+    let resolved = false;
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        server.close();
+        resolve(null);
+      }
+    }, 5 * 60 * 1000); // 5 分钟超时
+
+    const server = http.createServer((req, res) => {
+      if (req.url?.startsWith('/callback')) {
+        const url = new URL(req.url, `http://localhost:${port}`);
+        const code = url.searchParams.get('code');
+        const error = url.searchParams.get('error');
+        
+        resolved = true;
+        clearTimeout(timeout);
+        server.close();
+        
+        if (error) {
+          console.error(`授权失败: ${error}`);
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end('<html><body><h1>授权失败</h1><p>' + error + '</p></body></html>');
+          reject(new Error(error));
+        } else if (code) {
+          console.log('✓ 已收到授权码');
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end('<html><body><h1>授权成功</h1><p>您可以关闭此页面</p></body></html>');
+          resolve(code);
+        } else {
+          res.writeHead(400);
+          res.end('Missing code parameter');
+          resolve(null);
+        }
+      } else {
+        res.writeHead(404);
+        res.end('Not Found');
+      }
+    });
+
+    server.listen(port, () => {
+      console.log(`本地回调服务器已启动: ${redirectUri}`);
+    });
+
+    server.on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`端口 ${port} 已被占用，请关闭其他程序后重试`);
+        resolve(null);
+      } else {
+        reject(err);
+      }
+    });
+  });
 }
 
 /**
