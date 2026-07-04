@@ -1,6 +1,6 @@
 {
   "name": "@cvtoolman/pingcode-cli",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "PingCode CLI - 通过命令行操作 PingCode，配合 Skill 文件为 AI 编程工具提供项目管理能力",
   "type": "module",
   "main": "dist/client/index.js",
