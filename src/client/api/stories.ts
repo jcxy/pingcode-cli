@@ -1,5 +1,7 @@
 /**
- * PingCode 需求（Story）相关 API
+ * PingCode 需求（Ship Ideas）相关 API
+ *
+ * 端点依据 pingcodeDocs/产品管理/需求：/v1/ship/ideas
  */
 
 import type { PingCodeClient } from '../client.js';
@@ -8,49 +10,36 @@ import type { ListStoriesOptions, PaginatedResponse } from '../types.js';
 export class StoriesAPI {
   constructor(private client: PingCodeClient) {}
 
-  private resolveProductId(productId?: string): string {
-    const pid = productId || this.client.productId;
-    if (!pid) throw new Error('必须提供 productId');
-    return pid;
-  }
-
   async listStories(options: ListStoriesOptions = {}): Promise<PaginatedResponse> {
-    const pid = this.resolveProductId(options.productId);
     const params: Record<string, any> = {
       page_index: options.pageIndex ?? 0,
       page_size: Math.min(options.pageSize ?? 30, 100),
     };
-    if (options.storyType) params.type_id = options.storyType;
-    if (options.statusId) params.status_id = options.statusId;
-    if (options.priority) params.priority = options.priority;
-    if (options.query) params.query = options.query;
-    return this.client.get(`/v1/scm/products/${pid}/stories`, params);
+    if (options.productId) params.product_id = options.productId;
+    if (options.stateId) params.state_id = options.stateId;
+    if (options.priorityId) params.priority_id = options.priorityId;
+    if (options.keywords) params.keywords = options.keywords;
+    if (options.createdBetween) params.created_between = options.createdBetween;
+    if (options.updatedBetween) params.updated_between = options.updatedBetween;
+    if (options.includePublicImageToken) params.include_public_image_token = options.includePublicImageToken;
+    return this.client.get('/v1/ship/ideas', params);
   }
 
-  async getStory(storyId: string, productId?: string): Promise<any> {
-    const pid = this.resolveProductId(productId);
-    return this.client.get(`/v1/scm/products/${pid}/stories/${storyId}`);
-  }
-
-  async searchStories(keyword: string, productId?: string, pageIndex = 0, pageSize = 30): Promise<PaginatedResponse> {
-    return this.listStories({ productId, query: keyword, pageIndex, pageSize });
-  }
-
-  async getStoryTypes(productId?: string): Promise<any[]> {
-    const pid = this.resolveProductId(productId);
-    const result = await this.client.get(`/v1/scm/products/${pid}/story_types`);
-    return result.values ?? [];
+  async searchStories(keywords: string, productId?: string, pageIndex = 0, pageSize = 30): Promise<PaginatedResponse> {
+    return this.listStories({ productId, keywords, pageIndex, pageSize });
   }
 
   async getStoryStatuses(productId?: string): Promise<any[]> {
-    const pid = this.resolveProductId(productId);
-    const result = await this.client.get(`/v1/scm/products/${pid}/story_statuses`);
+    const params: Record<string, any> = {};
+    if (productId) params.product_id = productId;
+    const result = await this.client.get('/v1/ship/idea/states', params);
     return result.values ?? [];
   }
 
   async getStoryPriorities(productId?: string): Promise<any[]> {
-    const pid = this.resolveProductId(productId);
-    const result = await this.client.get(`/v1/scm/products/${pid}/story_priorities`);
+    const params: Record<string, any> = {};
+    if (productId) params.product_id = productId;
+    const result = await this.client.get('/v1/ship/idea/priorities', params);
     return result.values ?? [];
   }
 }

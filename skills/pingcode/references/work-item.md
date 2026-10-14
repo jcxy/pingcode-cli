@@ -11,6 +11,7 @@ pingcode-cli work-item list [选项]
 | `--project-ids <ids>` | 项目 ID（逗号分隔） |
 | `--keywords <kw>` | 关键字搜索 |
 | `--assignee-ids <ids>` | 负责人 ID |
+| `--include-public-image-token <props>` | 包含图片资源 token 的属性（逗号分隔，最多 20 个，支持 description 和多行文本类型属性，如 `description`） |
 | `--page-index <n>` | 页码，从 0 开始，默认 0 |
 | `--page-size <n>` | 每页数量，默认 30 |
 | `--format json` | JSON 格式输出 |
@@ -18,8 +19,10 @@ pingcode-cli work-item list [选项]
 ## 获取工作项详情
 
 ```bash
-pingcode-cli work-item get <work_item_id> [--format json]
+pingcode-cli work-item get <work_item_id 或编号> [--format json]
 ```
+
+> 参数支持内部 ID（24 位十六进制）或编号（如 `PIN-3`），编号会自动解析为内部 ID。`attachment-list`、`comment-list`、`comment-add` 同样支持。
 
 返回：编号、标题、类型、状态、优先级、负责人、迭代、描述。
 
@@ -45,6 +48,14 @@ pingcode-cli work-item create [选项]
 ```bash
 pingcode-cli work-item search <keyword> [--project-ids <ids>] [--page-index <n>] [--page-size <n>] [--format json]
 ```
+
+## 列出工作项附件
+
+```bash
+pingcode-cli work-item attachment-list <work_item_id> [--comment-id <id>] [--format json]
+```
+
+返回工作项的附件列表（含图片附件）。图片附件的 `file_type` 为 `image`，并带 `download_url` 可直接下载。
 
 ## 列出工作项评论
 

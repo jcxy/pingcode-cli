@@ -23,8 +23,10 @@ pingcode-cli requirement list [选项]
 ## 获取需求详情
 
 ```bash
-pingcode-cli requirement get <story_id> [选项]
+pingcode-cli requirement get <story_id 或编号> [选项]
 ```
+
+> 参数支持内部 ID 或需求编号（如 `SLC-1`）。需求模块没有单条详情端点，内部通过列表接口获取全量结构（编号走 keywords 搜索，ID 走分页遍历匹配）。
 
 | 参数 | 说明 |
 |------|------|

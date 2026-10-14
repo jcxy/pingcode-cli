@@ -3,3 +3,4 @@ dist/
 .env
 .pingcode_token.json
 *.tsbuildinfo
+项目优化.md

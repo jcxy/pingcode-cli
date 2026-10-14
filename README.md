@@ -302,27 +302,33 @@ pingcode-cli user search <关键词>       # 搜索用户
 
 # 项目
 pingcode-cli project list               # 获取项目列表
-pingcode-cli project members <id>       # 获取项目成员
+pingcode-cli project get <id 或编号>     # 获取项目详情（支持 PIN 格式编号）
+pingcode-cli project members <id 或编号> # 获取项目成员（支持编号）
 
 # 工作项
 pingcode-cli work-item list             # 获取工作项列表
-pingcode-cli work-item get <id>         # 获取工作项详情
+pingcode-cli work-item get <id 或编号>   # 获取工作项详情（支持 PIN-3 格式编号）
 pingcode-cli work-item create           # 创建工作项
 pingcode-cli work-item search <关键词>   # 搜索工作项
-pingcode-cli work-item comment-list <id> # 查看工作项评论
-pingcode-cli work-item comment-add <id> --content "评论内容" # 添加评论
+pingcode-cli work-item attachment-list <id 或编号> # 查看工作项附件（含图片）
+pingcode-cli work-item comment-list <id 或编号> # 查看工作项评论
+pingcode-cli work-item comment-add <id 或编号> --content "评论内容" # 添加评论
 
 # 迭代
 pingcode-cli sprint list --project-id <id>  # 获取迭代列表
 pingcode-cli sprint get <id>                 # 获取迭代详情
 
+# 全局搜索
+pingcode-cli search <关键词>            # 跨模块模糊搜索（工作项/需求/Wiki 空间）
+
 # 需求
 pingcode-cli requirement list             # 获取需求列表
-pingcode-cli requirement get <id>         # 获取需求详情
+pingcode-cli requirement get <id 或编号>   # 获取需求详情（支持 SLC-1 格式编号）
 pingcode-cli requirement search <关键词>   # 搜索需求
 
 # Wiki
 pingcode-cli wiki space-list             # 获取 Wiki 空间列表
+pingcode-cli wiki space-get <id 或标识>   # 获取空间详情（支持 DEMO 格式标识）
 pingcode-cli wiki page-list --space-id <id>  # 获取页面列表
 pingcode-cli wiki page-create --space-id <id> --name "标题" --content "内容"  # 创建页面
 ```

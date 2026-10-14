@@ -20,6 +20,7 @@ export class WorkItemsAPI {
     if (options.sprintIds) params.sprint_ids = options.sprintIds;
     if (options.participantId) params.participant_id = options.participantId;
     if (options.keywords) params.keywords = options.keywords;
+    if (options.includePublicImageToken) params.include_public_image_token = options.includePublicImageToken;
     return this.client.get('/v1/project/work_items', params);
   }
 
@@ -103,6 +104,18 @@ export class WorkItemsAPI {
   async getWorkItemRelationTypes(): Promise<any[]> {
     const result = await this.client.get('/v1/project/work_item/relation_types');
     return result.values ?? [];
+  }
+
+  /** 获取工作项附件列表（含图片附件，图片附件带 download_url） */
+  async listWorkItemAttachments(workItemId: string, commentId?: string, pageIndex = 0, pageSize = 30): Promise<PaginatedResponse> {
+    const params: Record<string, any> = {
+      principal_type: 'work_item',
+      principal_id: workItemId,
+      page_index: pageIndex,
+      page_size: Math.min(pageSize, 100),
+    };
+    if (commentId) params.comment_id = commentId;
+    return this.client.get('/v1/attachments', params);
   }
 
   // ============== 评论子 API ==============

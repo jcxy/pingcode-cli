@@ -9,8 +9,10 @@ pingcode-cli wiki space-list [--keywords <关键字>] [--format json]
 ## 获取空间详情
 
 ```bash
-pingcode-cli wiki space-get <space_id> [--format json]
+pingcode-cli wiki space-get <space_id 或标识> [--format json]
 ```
+
+> 参数支持内部 ID 或空间标识（如 `DEMO`），标识会自动解析为内部 ID。
 
 ## 创建空间
 

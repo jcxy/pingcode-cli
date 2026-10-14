@@ -37,13 +37,16 @@ export interface TokenResponse {
 
 // ============== 子 API 参数类型 ==============
 
-/** 需求列表查询参数 */
+/** 需求列表查询参数（对应 GET /v1/ship/ideas） */
 export interface ListStoriesOptions extends PaginationParams {
   productId?: string;
-  storyType?: string;
-  statusId?: string;
-  priority?: string;
-  query?: string;
+  stateId?: string;
+  priorityId?: string;
+  keywords?: string;
+  createdBetween?: string;
+  updatedBetween?: string;
+  /** 包含图片资源 token 的属性，支持 description 和多行文本类型属性 */
+  includePublicImageToken?: string;
 }
 
 /** 工作项列表查询参数 */
@@ -55,6 +58,8 @@ export interface ListWorkItemsOptions extends PaginationParams {
   sprintIds?: string;
   participantId?: string;
   keywords?: string;
+  /** 包含图片资源 token 的属性，使用','分割，最多 20 个，支持 description 和多行文本类型属性 */
+  includePublicImageToken?: string;
 }
 
 /** 创建工作项参数 */

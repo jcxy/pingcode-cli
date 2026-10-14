@@ -4,6 +4,24 @@ import { printJson, printTable, printKeyValue } from '../output.js';
 
 export const wikiCommand = new Command('wiki').description('知识管理');
 
+/**
+ * 解析空间引用：支持标识（如 DEMO）或内部 ID（24 位十六进制）
+ * 注意：列表接口的 keywords 不匹配 identifier，需拉取列表后本地匹配
+ */
+async function resolveSpaceRef(ref: string): Promise<string> {
+  if (/^[0-9a-f]{24}$/i.test(ref)) return ref;
+  const client = await getClient();
+  const pageSize = 100;
+  for (let pageIndex = 0; pageIndex < 10; pageIndex++) {
+    const data = await client.wiki.listSpaces(undefined, pageIndex, pageSize);
+    const values: any[] = data.values || [];
+    const hit = values.find((s) => (s.identifier || '').toLowerCase() === ref.toLowerCase());
+    if (hit) return hit.id;
+    if (values.length < pageSize) break;
+  }
+  throw new Error(`未找到空间: ${ref}`);
+}
+
 wikiCommand
   .command('space-list')
   .description('获取空间列表')
@@ -24,7 +42,7 @@ wikiCommand
   .action(async (spaceId, opts) => {
     try {
       const client = await getClient();
-      const data = await client.wiki.getSpace(spaceId);
+      const data = await client.wiki.getSpace(await resolveSpaceRef(spaceId));
       opts.format === 'json' ? printJson(data) : printKeyValue(data);
     } catch (e: any) { console.error(e.message); process.exit(1); }
   });

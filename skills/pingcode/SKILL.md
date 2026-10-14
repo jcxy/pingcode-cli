@@ -25,6 +25,15 @@ description: 通过 CLI 操作 PingCode 项目管理平台。当用户提到工�
 | 查看用户信息、查找用户 | 用户 | `references/user.md` |
 | 认证登录、检查令牌状态 | 认证 | `references/auth.md` |
 | 查看需求列表、读取需求详情、搜索需求 | 需求 | `references/requirement.md` |
+| 跨模块模糊搜索（不知道信息属于哪个模块时） | 全局搜索 | 直接执行 `pingcode-cli search <关键词>` |
+
+## 全局搜索
+
+不确定目标在哪个模块时，直接使用聚合搜索（并行搜工作项/产品需求/Wiki 空间，输出分组结果）：
+
+```bash
+pingcode-cli search <关键词> [--format json]
+```
 
 ## 使用方式
 

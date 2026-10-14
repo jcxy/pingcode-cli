@@ -10,8 +10,11 @@ export class WikiAPI {
 
   // ============== 空间管理 ==============
 
-  async listSpaces(keywords?: string): Promise<any> {
-    const params: Record<string, any> = {};
+  async listSpaces(keywords?: string, pageIndex = 0, pageSize = 30): Promise<any> {
+    const params: Record<string, any> = {
+      page_index: pageIndex,
+      page_size: Math.min(pageSize, 100),
+    };
     if (keywords) params.keywords = keywords;
     return this.client.get('/v1/wiki/spaces', params);
   }

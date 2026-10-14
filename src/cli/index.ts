@@ -13,6 +13,7 @@ import { sprintCommand } from './commands/sprint.js';
 import { wikiCommand } from './commands/wiki.js';
 import { projectCommand } from './commands/project.js';
 import { requirementCommand } from './commands/requirement.js';
+import { searchCommand } from './commands/search.js';
 
 // 将全局配置（~/.pingcode/config.json）注入环境变量
 applyGlobalConfigToEnv();
@@ -28,6 +29,7 @@ program.addCommand(sprintCommand);
 program.addCommand(wikiCommand);
 program.addCommand(projectCommand);
 program.addCommand(requirementCommand);
+program.addCommand(searchCommand);
 
 // auth 相关子命令不需要预检查授权（避免死循环）
 const AUTH_COMMANDS = ['auth', 'help', '--help', '-h', '--version', '-V'];
